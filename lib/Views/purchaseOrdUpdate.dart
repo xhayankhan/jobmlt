@@ -232,23 +232,6 @@ bool isOldItem =false;
           itemssData.add(mapItem);
 
         log(itemssData.toString());
-          // Map orderDetails = {
-          //
-          //   'BalanceQuantity': itemLineData[i]['BalanceQuantity'],
-          //   'LineItemCode': itemLineData[i]['LineItemCode'],
-          //   'LineItemID': itemLineData[i]['LineItemID'],
-          //   'LineItemName': itemLineData[i]['LineItemName'],
-          //   'LineItemDescription': itemLineData[i]['LineItemDescription'],
-          //   'LineRate': itemLineData[i]['LineRate'],
-          //   'ItemType': itemLineData[i]['ItemType'],
-          //   'LineQuantity': itemLineData[i]['LineQuantity'],
-          //   'WareHouseName': itemLineData[i]['WareHouseName'],
-          //   'WareHouseID': itemLineData[i]['WareHouseID'],
-          //   'LineTotal': itemLineData[i]['LineTotal'],
-          // };
-          // orderList.add(orderDetails);
-          // print(orderDetails
-          //     .toString());
 
 
           qtyNeed.add(new TextEditingController());
