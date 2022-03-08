@@ -256,7 +256,7 @@ class RiItemModel {
     "ID": id,
     "VendorID": vendorId,
     "TransactionNumber": transactionNumber,
-    "TransactionDate": transactionDate.toIso8601String(),
+    "TransactionDate": transactionDate,
     "TransactionReference": transactionReference,
     "StreetAdrress": streetAdrress,
     "City": city,

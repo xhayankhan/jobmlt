@@ -178,7 +178,7 @@ class recieveInventoryState extends State<recieveInventory> {
                                       child: Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
-                                          'Inv #: ${items[index].txnNumber
+                                          'PO #: ${items[index].poNumber
                                               .toString()}',
                                           style: TextStyle(
                                             color: Colors.redAccent,
@@ -237,8 +237,7 @@ class recieveInventoryState extends State<recieveInventory> {
                                                                     left: 20,
                                                                     right: 8),
                                                                 child: Text(
-                                                                  'TXN #: ${items[index]
-                                                                      .txnNumber
+                                                                  'PO #: ${items[index].poNumber
                                                                       .toString()}',
 
                                                                 ),
@@ -252,17 +251,35 @@ class recieveInventoryState extends State<recieveInventory> {
                                                               left: 8,
                                                               right: 8,
                                                               top: 10),
-                                                          child: Text(
+                                                          child: Row(
+                                                            mainAxisAlignment: MainAxisAlignment
+                                                                .spaceBetween,
+                                                            children: [
+                                                              Text(
 
-                                                            'Doc Date: ${DateFormat(
-                                                                'dd-MM-yyyy')
-                                                                .format(
-                                                                DateTime.parse(
-                                                                    items[index]
-                                                                        .dateTimeCreated
-                                                                        .toString()))
-                                                                .toString()}',
+                                                                'Doc Date: ${DateFormat(
+                                                                    'dd-MM-yyyy')
+                                                                    .format(
+                                                                    DateTime.parse(
+                                                                        items[index]
+                                                                            .dateTimeCreated
+                                                                            .toString()))
+                                                                    .toString()}',
 
+                                                              ),
+                                                              Text(
+
+                                                                'Due Date: ${DateFormat(
+                                                                    'dd-MM-yyyy')
+                                                                    .format(
+                                                                    DateTime.parse(
+                                                                        items[index]
+                                                                            .dueDate
+                                                                            .toString()))
+                                                                    .toString()}',
+
+                                                              ),
+                                                            ],
                                                           ),
                                                         ),
                                                         Padding(
@@ -291,7 +308,7 @@ class recieveInventoryState extends State<recieveInventory> {
                                                                   onPressed: () {
                                                                     var idx = items[index];
                                                                     Get.to(
-                                                                        invoiceUpdate(
+                                                                        receiveInventoryUpdate(
                                                                           email: email,
                                                                           CompanyAuthToken: CompanyAuthToken,
                                                                           idx: idx,));
@@ -310,8 +327,8 @@ class recieveInventoryState extends State<recieveInventory> {
                                                               right: 8,
                                                               top: 10),
                                                           child: Text(
-                                                            'Bill Received: ${items[index]
-                                                                .billReceived
+                                                            'Amount Due: ${items[index]
+                                                                .amountDue
                                                                 .toString()}',
                                                             style: TextStyle(
                                                               fontSize: 15,
