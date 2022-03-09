@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:jobmlt/Models/paymentTermModel.dart';
 import 'package:http/http.dart' as http;
 import 'package:jobmlt/Models/purchaseOrderModel.dart';
+import 'package:jobmlt/Models/receiveInventorypdateItemModel.dart';
 import 'package:jobmlt/Models/recieveInventoryModel.dart';
 import 'package:jobmlt/Models/riItemModel.dart';
 import 'package:jobmlt/Models/vendorModel.dart';
@@ -75,15 +76,17 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
   List POFet = [];
   List itemData = [];
   List itemLineData = [];
+  List itemUpdateLineData = [];
   List<WarehouseModel> warehouseResponse = [];
   List<PaymentTermModel> responsePayment = [];
   Future? poResponse ;
   List<RiItemModel> itemLineJson=[];
+  List<Map<String, dynamic>> itemUpdateLineJson=[];
   List<vendorModel> vendorJson = [];
 
   var ItemName = '',
       amount = '',
-  billId,
+      billID,
       qtynd,
       customerID,
       itemCode,
@@ -99,15 +102,21 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
       warehouseID,
       poNumber,
       companyID,
-  txnNum,
+      txnNum,
       vendor,
-  billchck,
+      billchck,
       VendorContactID,
-  transTyp,
-  Po;
+      transTyp,
+      Po;
   double qty = 0.0;
   List<TextEditingController> qtyNeed = [];
   List<TextEditingController> ID = [];
+  List<TextEditingController> IMEI = [];
+  List<TextEditingController> ReceiptLineID = [];
+  List<TextEditingController> VendorBillLineID = [];
+  List<TextEditingController> IV_TrasactionLineID = [];
+  List<TextEditingController> ItemUOMID = [];
+  List<TextEditingController> BoxNumber = [];
   List<TextEditingController> blncQty = [];
   List<TextEditingController> Rate = [];
   List<TextEditingController> amountTotal = [];
@@ -130,13 +139,14 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
   var sum;
   bool isOldItem = false;
   var idItem='';
+  var idItemUpd='';
   var toknow = 0;
   var doing = false;
   var pofetch = false;
   bool _checkbox = false;
   bool _checkboxListTile = false;
   bool sameImei=false;
-   List<List<String>> dataList = [];
+  List<List<String>> dataList = [];
 
   final AsyncMemoizer _memoizer = AsyncMemoizer();
   @override
@@ -159,19 +169,19 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
 
       _fetchCustomerName();
 
-      log(idItem.toString());
+
       if (isEditing) {
-        log(idx.id.toString());
+        log('this is the id ${idx.id.toString()}');
         txnNum=idx.txnNumber.toString();
-        billId=idx.billId.toString();
+        billID=idx.billId.toString();
         vendorName.text = idx.vendorName.toString();
         vendor = idx.vendorId.toString();
         sum = idx.total;
         VendorContactID=idx.vendorContactId.toString();
         transTyp=idx.transactionType.toString();
         //others.text = idx.other.toString();
-       // PONumber.text = idx.poNumber.toString();
-print(PONumber.text);
+        // PONumber.text = idx.poNumber.toString();
+        print(PONumber.text);
         companyID = idx.companyId.toString();
         docdatee.text = idx.txnDate.toString();
         duedatee.text = idx.dueDate.toString();
@@ -222,24 +232,30 @@ print(PONumber.text);
       if(isEditing==true) {
         pofetch=true;
         //poResponse =  POFetch();
-        itemLineJson = await getItemLine();
-        log(itemLineData.toString());
-        for (int i = 0; i < itemLineData.length; i++) {
+        itemUpdateLineJson = await getItemLineforUpdate();
+        log(itemUpdateLineJson.toString());
+        for (int i = 0; i < itemUpdateLineData.length; i++) {
           isOldItem = true;
           Map mapItem = {
-            'ItemCode': itemLineData[i]['LineItemCode'],
-            'ItemCodeID': itemLineData[i]['LineItemID'],
-            'ItemName': itemLineData[i]['LineItemName'],
-            'LineQuantity': itemLineData[i]['LineQuantity'],
-            'BalanceQuantity': itemLineData[i]['BalanceQuantity'],
-            'Description': itemLineData[i]['LineItemDescription'],
-            'ItemPrice': itemLineData[i]['LineRate'],
-            'ItemQuantity': itemLineData[i]['LineQuantity'],
-            'ItemType': itemLineData[i]['ItemType'],
-            'ItemUnitCost': itemLineData[i]['LineRate'],
-            'LineTotal': itemLineData[i]['LineTotal'],
-            'POLineID': itemLineData[i]['PurchaseOrderID'],
-            'ID':itemLineData[i]['ID'],
+            'ItemCode': itemUpdateLineData[i]['ItemCode'],
+            'ItemCodeID': itemUpdateLineData[i]['ItemID'],
+            'ItemName': itemUpdateLineData[i]['ItemCode'],
+            'LineQuantity': itemUpdateLineData[i]['Qty'],
+            'BalanceQuantity': itemUpdateLineData[i]['BalanceQty'],
+            'Description': itemUpdateLineData[i]['Description'],
+            'ItemPrice': itemUpdateLineData[i]['Rate'],
+            'ItemQuantity': itemUpdateLineData[i]['LineQuantity'],
+            'ItemType': itemUpdateLineData[i]['ItemType'],
+            'ItemUnitCost': itemUpdateLineData[i]['Rate'],
+            'LineTotal': itemUpdateLineData[i]['Amount'],
+            'POLineID': itemUpdateLineData[i]['POLineID'],
+            'ID':itemUpdateLineData[i]['ID'],
+            'IMEI': itemUpdateLineData[i]['IMEI'],
+            'ReceiptLineID': itemUpdateLineData[i]['ReceiptLineID'],
+            'VendorBillLineID': itemUpdateLineData[i]['VendorBillLineID'],
+            "IV_TrasactionLineID": itemUpdateLineData[i]['IV_TrasactionLineID'],
+            "ItemUOMID":itemUpdateLineData[i]['ItemUOMID'],
+            'BoxNumber':itemUpdateLineData[i]['BoxNumber'],
 
           };
           itemssData.add(mapItem);
@@ -258,7 +274,19 @@ print(PONumber.text);
           iuc.add(new TextEditingController());
           POLineId.add(new TextEditingController());
           blncQty.add(new TextEditingController());
+          BoxNumber.add(new TextEditingController());
+          IMEI.add(new TextEditingController());
+          IV_TrasactionLineID.add(new TextEditingController());
+          ItemUOMID.add(new TextEditingController());
+          VendorBillLineID.add(new TextEditingController());
+          ReceiptLineID.add(new TextEditingController());
           ID[i].text=itemssData[i]['ID'].toString();
+          ReceiptLineID[i].text=itemssData[i]['ReceiptLineID'].toString();
+          VendorBillLineID[i].text=itemssData[i]['VendorBillLineID'].toString();
+          ItemUOMID[i].text=itemssData[i]['ItemUOMID'].toString();
+          IV_TrasactionLineID[i].text=itemssData[i]['IV_TrasactionLineID'].toString();
+          IMEI[i].text=itemssData[i]['IMEI'].toString();
+          BoxNumber[i].text=itemssData[i]['BoxNumber'].toString();
           POLineId[i].text=itemssData[i]['POLineID'].toString();
           ic[i].text=itemssData[i]['ItemCode'].toString();
           icid[i].text= itemssData[i]['ItemCodeID'].toString();
@@ -272,11 +300,11 @@ print(PONumber.text);
           qtyNeed[i].text = itemssData[i]['LineQuantity'] == null ? '0' : qtyNeed[i].text;
           amountTotal[i].text=itemssData[i]['LineTotal'].toString();
           amountTotal[i].text=itemssData[i]['LineTotal']==null?'0': amountTotal[i].text;
-                if(ityp[i].text=='20'){
+          if(ityp[i].text=='20'){
             serialNumber.add(TextEditingController());
           }
         }
-        toknow=orderList.length;
+
       }}); }
 
   @override
@@ -306,14 +334,14 @@ print(PONumber.text);
                         onChanged: (value) {
                           setState(() {
                             _checkbox = !_checkbox;
-                          if(_checkbox==true){
-                            billchck='Receive Item and Enter Bill';
-                            bill.text=billchck;
-                          }
-                          else{
-                            billchck='Receive Item';
-                            bill.text=billchck;
-                          }
+                            if(_checkbox==true){
+                              billchck='Receive Item and Enter Bill';
+                              bill.text=billchck;
+                            }
+                            else{
+                              billchck='Receive Item';
+                              bill.text=billchck;
+                            }
                           });
                         },
                       ),
@@ -379,7 +407,7 @@ print(PONumber.text);
                             errorText: vendor == null ? 'Field Required' : '',
                             errorStyle: TextStyle(
                                 color:
-                                    vendor == null ? Colors.red : Colors.black),
+                                vendor == null ? Colors.red : Colors.black),
                             //errorBorder:
                             errorBorder: OutlineInputBorder(
                               borderRadius: const BorderRadius.all(
@@ -429,177 +457,177 @@ print(PONumber.text);
                         ),
                       ),
                       Builder(
-                        builder: (context) {
-                          if(vendor!=null){
-                          return FutureBuilder(
+                          builder: (context) {
+                            if(vendor!=null){
+                              return FutureBuilder(
 
-                              //future: poResponse,
-                            builder: (builder,context) {
-                              if (pofetch==true) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 10.0),
-                                  child: DropdownButtonFormField(
-                                    decoration: InputDecoration(
-                                      errorText: '',
-                                      errorStyle: TextStyle(
+                                //future: poResponse,
+                                  builder: (builder,context) {
+                                    if (pofetch==true) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 10.0),
+                                        child: DropdownButtonFormField(
+                                          decoration: InputDecoration(
+                                            errorText: '',
+                                            errorStyle: TextStyle(
 
-                                          color: Colors.black
-                                      ),
-                                      //errorBorder:
-                                      errorBorder: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(
-                                          const Radius.circular(10.0),
+                                                color: Colors.black
+                                            ),
+                                            //errorBorder:
+                                            errorBorder: OutlineInputBorder(
+                                              borderRadius: const BorderRadius.all(
+                                                const Radius.circular(10.0),
+                                              ),
+                                              borderSide: BorderSide(
+                                                  color: Colors.black),
+                                            ),
+
+                                            filled: true,
+                                            hintStyle: TextStyle(
+                                                color: Colors.grey[800]),
+                                            labelText: "Purchase Order",
+                                          ),
+
+                                          items: POFet.map((itms) {
+                                            return new DropdownMenuItem(
+                                              onTap: () {
+                                                PONumber.text =
+                                                itms["TransactionNumber"];
+                                                print(PONumber.text);
+                                              },
+                                              child: new Text(
+                                                '${itms["TransactionNumber"]} - ${itms["POStatus"]}',
+                                              ),
+                                              value: itms["ID"].toString(),
+                                            );
+                                          }).toList(),
+                                          onChanged: (itm) async {
+                                            Po = null;
+                                            setState(() {
+                                              Po = itm as String?;
+                                              if (itemssData.isNotEmpty) {
+                                                for (int i = 0; i < itemssData.length; i++)
+                                                {
+                                                  itemssData.removeAt(i);
+                                                  log('items data removed by po changing');
+                                                }
+                                              }
+                                              print(Po);
+                                            });
+                                            if(itemLineData.isNotEmpty||isEditing==false) {
+                                              print("its running nowww");
+                                              itemLineJson = await getItemLine();
+
+
+                                              print(itemLineData.length);
+
+                                              for (int i = 0; i <
+                                                  itemLineData.length; i++) {
+                                                ic.add(new TextEditingController());
+                                                icid.add(new TextEditingController());
+                                                iN.add(new TextEditingController());
+                                                des.add(new TextEditingController());
+                                                rt.add(new TextEditingController());
+                                                ityp.add(new TextEditingController());
+                                                iuc.add(new TextEditingController());
+                                                qtyNeed.add(
+                                                    new TextEditingController());
+                                                amountTotal.add(
+                                                    new TextEditingController());
+                                                blncQty.add(TextEditingController());
+                                                serialNumber.add(
+                                                    TextEditingController());
+                                                POLineId.add(
+                                                    new TextEditingController());
+                                                ID.add(new TextEditingController());
+                                                Map mapItem = {
+                                                  'ItemCode': itemLineData[i]['LineItemCode'],
+                                                  'ItemCodeID': itemLineData[i]['LineItemID'],
+                                                  'ItemName': itemLineData[i]['LineItemName'],
+                                                  'BalanceQuantity': itemLineData[i]['BalanceQuantity'],
+                                                  'Description': itemLineData[i]['LineItemDescription'],
+                                                  'ItemPrice': itemLineData[i]['LineRate'],
+                                                  'ItemQuantity': itemLineData[i]['LineQuantity'],
+                                                  'ItemType': itemLineData[i]['ItemType'],
+                                                  'ItemUnitCost': itemLineData[i]['LineRate'],
+                                                  'LineTotal': itemLineData[i]['LineTotal'],
+                                                  'POLineID': itemLineData[i]['ID'],
+                                                  'ID':itemLineData[i]['ID'],
+
+                                                };
+                                                itemssData.add(mapItem);
+
+                                                log(itemssData.toString());
+                                                ID[i].text=itemssData[i]['ID'].toString();
+                                                POLineId[i].text =
+                                                    itemssData[i]['POLineID']
+                                                        .toString();
+                                                ic[i].text = itemssData[i]['ItemCode']
+                                                    .toString();
+                                                icid[i].text =
+                                                    itemssData[i]['ItemCodeID']
+                                                        .toString();
+                                                iN[i].text = itemssData[i]['ItemName']
+                                                    .toString();
+                                                des[i].text =
+                                                    itemssData[i]['Description']
+                                                        .toString();
+                                                rt[i].text =
+                                                    itemssData[i]['ItemPrice']
+                                                        .toString();
+                                                ityp[i].text =
+                                                    itemssData[i]['ItemType']
+                                                        .toString();
+                                                iuc[i].text =
+                                                    itemssData[i]['ItemUnitCost']
+                                                        .toString();
+                                                qtyNeed[i].text =
+                                                    itemssData[i]['ItemQuantity']
+                                                        .toString();
+                                                blncQty[i].text =
+                                                    itemssData[i]['BalanceQuantity']
+                                                        .toString();
+                                                amountTotal[i].text =
+                                                    itemssData[i]['LineTotal']
+                                                        .toString();
+                                                companyID =
+                                                itemLineData[i]['CompanyID'];
+                                                if (0 < i) {
+                                                  sum = sum + double
+                                                      .parse(
+                                                      amountTotal[i]
+                                                          .text);
+                                                }
+                                                else {
+                                                  sum = double.parse(
+                                                      amountTotal[i]
+                                                          .text);
+                                                }
+                                                print('for loop rann');
+                                              }
+
+                                              subTotal.text =
+                                                  sum.toString();
+
+                                              total.text =
+                                                  subTotal.text;
+                                            } },
+                                          value: Po,
+
                                         ),
-                                        borderSide: BorderSide(
-                                            color: Colors.black),
-                                      ),
-
-                                      filled: true,
-                                      hintStyle: TextStyle(
-                                          color: Colors.grey[800]),
-                                      labelText: "Purchase Order",
-                                    ),
-
-                                    items: POFet.map((itms) {
-                                      return new DropdownMenuItem(
-                                        onTap: () {
-                                          PONumber.text =
-                                          itms["TransactionNumber"];
-                                          print(PONumber.text);
-                                        },
-                                        child: new Text(
-                                          '${itms["TransactionNumber"]} - ${itms["POStatus"]}',
-                                        ),
-                                        value: itms["ID"].toString(),
                                       );
-                                    }).toList(),
-                                    onChanged: (itm) async {
-                                      Po = null;
-                                      setState(() {
-                                        Po = itm as String?;
-                                        if (itemssData.isNotEmpty) {
-                                          for (int i = 0; i < itemssData.length; i++)
-                                          {
-                                            itemssData.removeAt(i);
-                                            log('items data removed by po changing');
-                                          }
-                                        }
-                                        print(Po);
-                                      });
-                                      if(itemLineData.isNotEmpty||isEditing==false) {
-                                        print("its running nowww");
-                                        itemLineJson = await getItemLine();
-
-
-                                        print(itemLineData.length);
-
-                                        for (int i = 0; i <
-                                            itemLineData.length; i++) {
-                                          ic.add(new TextEditingController());
-                                          icid.add(new TextEditingController());
-                                          iN.add(new TextEditingController());
-                                          des.add(new TextEditingController());
-                                          rt.add(new TextEditingController());
-                                          ityp.add(new TextEditingController());
-                                          iuc.add(new TextEditingController());
-                                          qtyNeed.add(
-                                              new TextEditingController());
-                                          amountTotal.add(
-                                              new TextEditingController());
-                                          blncQty.add(TextEditingController());
-                                          serialNumber.add(
-                                              TextEditingController());
-                                          POLineId.add(
-                                              new TextEditingController());
-                                          ID.add(new TextEditingController());
-                                          Map mapItem = {
-                                            'ItemCode': itemLineData[i]['LineItemCode'],
-                                            'ItemCodeID': itemLineData[i]['LineItemID'],
-                                            'ItemName': itemLineData[i]['LineItemName'],
-                                            'BalanceQuantity': itemLineData[i]['BalanceQuantity'],
-                                            'Description': itemLineData[i]['LineItemDescription'],
-                                            'ItemPrice': itemLineData[i]['LineRate'],
-                                            'ItemQuantity': itemLineData[i]['LineQuantity'],
-                                            'ItemType': itemLineData[i]['ItemType'],
-                                            'ItemUnitCost': itemLineData[i]['LineRate'],
-                                            'LineTotal': itemLineData[i]['LineTotal'],
-                                            'POLineID': itemLineData[i]['PurchaseOrderID'],
-                                            'ID':itemLineData[i]['ID'],
-
-                                          };
-                                          itemssData.add(mapItem);
-
-                                          log(itemssData.toString());
-                                          ID[i].text=itemssData[i]['ID'].toString();
-                                          POLineId[i].text =
-                                              itemssData[i]['POLineID']
-                                                  .toString();
-                                          ic[i].text = itemssData[i]['ItemCode']
-                                              .toString();
-                                          icid[i].text =
-                                              itemssData[i]['ItemCodeID']
-                                                  .toString();
-                                          iN[i].text = itemssData[i]['ItemName']
-                                              .toString();
-                                          des[i].text =
-                                              itemssData[i]['Description']
-                                                  .toString();
-                                          rt[i].text =
-                                              itemssData[i]['ItemPrice']
-                                                  .toString();
-                                          ityp[i].text =
-                                              itemssData[i]['ItemType']
-                                                  .toString();
-                                          iuc[i].text =
-                                              itemssData[i]['ItemUnitCost']
-                                                  .toString();
-                                          qtyNeed[i].text =
-                                              itemssData[i]['ItemQuantity']
-                                                  .toString();
-                                          blncQty[i].text =
-                                              itemssData[i]['BalanceQuantity']
-                                                  .toString();
-                                          amountTotal[i].text =
-                                              itemssData[i]['LineTotal']
-                                                  .toString();
-                                          companyID =
-                                          itemLineData[i]['CompanyID'];
-                                          if (0 < i) {
-                                            sum = sum + double
-                                                .parse(
-                                                amountTotal[i]
-                                                    .text);
-                                          }
-                                          else {
-                                            sum = double.parse(
-                                                amountTotal[i]
-                                                    .text);
-                                          }
-                                          print('for loop rann');
-                                        }
-
-                                        subTotal.text =
-                                            sum.toString();
-
-                                        total.text =
-                                            subTotal.text;
-                                      } },
-                                    value: Po,
-
-                                  ),
-                                );
-                              }
-                              else {
-                                return Center(child: Container( height:50,
-                                    width:50,
-                                    child: CircularProgressIndicator()));
-                              }
-                            });
-                       }
-                        else {
-                          return Text('');
+                                    }
+                                    else {
+                                      return Center(child: Container( height:50,
+                                          width:50,
+                                          child: CircularProgressIndicator()));
+                                    }
+                                  });
+                            }
+                            else {
+                              return Text('');
+                            }
                           }
-                  }
                       ),
                       Builder(builder: (context) {
                         if (_checkbox == true) {
@@ -666,7 +694,7 @@ print(PONumber.text);
                                 ),
                                 SizedBox(
                                   width:
-                                      MediaQuery.of(context).size.width / 5.0,
+                                  MediaQuery.of(context).size.width / 5.0,
                                   child: TextFormField(
                                       readOnly: true,
                                       onTap: () {
@@ -680,34 +708,34 @@ print(PONumber.text);
                               ],
                             ),
                             Builder(
-                              builder: (context) {
-                                if(_checkbox==true){
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Due Date: ',
-                                    ),
-                                    SizedBox(
-                                      width:
+                                builder: (context) {
+                                  if(_checkbox==true){
+                                    return Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Due Date: ',
+                                        ),
+                                        SizedBox(
+                                          width:
                                           MediaQuery.of(context).size.width / 5.0,
-                                      child: TextFormField(
-                                          readOnly: true,
-                                          onTap: () {
-                                            pickDueDate(context);
-                                          },
-                                          controller: duedatee,
-                                          decoration: InputDecoration(
-                                            border: InputBorder.none,
-                                          )),
-                                    )
-                                  ],
-                                );
-                              }
-                              else{
-                                return Text('');
+                                          child: TextFormField(
+                                              readOnly: true,
+                                              onTap: () {
+                                                pickDueDate(context);
+                                              },
+                                              controller: duedatee,
+                                              decoration: InputDecoration(
+                                                border: InputBorder.none,
+                                              )),
+                                        )
+                                      ],
+                                    );
+                                  }
+                                  else{
+                                    return Text('');
+                                  }
                                 }
-                             }
                             ),
                           ],
                         ),
@@ -717,7 +745,7 @@ print(PONumber.text);
                         child: DropdownButtonFormField(
                           decoration: InputDecoration(
                             errorText:
-                                warehouseID == null ? 'Field Required' : '',
+                            warehouseID == null ? 'Field Required' : '',
                             errorStyle: TextStyle(
                                 color: warehouseID == null
                                     ? Colors.red
@@ -795,7 +823,7 @@ print(PONumber.text);
                       Builder(
                           builder: (context) {
 
-                            if (Po==null || itemLineData.isEmpty) {
+                            if (Po==null || itemssData.isEmpty) {
                               return Text('');
                             } else {
                               return ListView.builder(
@@ -848,7 +876,7 @@ print(PONumber.text);
                                           qtyNeed.remove(qtyNeed[index]);
                                           amountTotal.remove(amountTotal[index]);
                                           if(ityp[index].text=='20'){
-                                          serialNumber.remove(serialNumber[index]);
+                                            serialNumber.remove(serialNumber[index]);
                                           }
                                           blncQty.remove(blncQty[index]);
                                           ityp.remove(ityp[index]);
@@ -898,7 +926,7 @@ print(PONumber.text);
                                                   children: [
                                                     Expanded(
                                                       child: TextFormField(
-                                                          readOnly: ityp[index].text=='20'?true:false,
+                                                        readOnly: ityp[index].text=='20'?true:false,
                                                         controller: qtyNeed[index],
                                                         keyboardType: TextInputType
                                                             .number,
@@ -1062,7 +1090,7 @@ print(PONumber.text);
                                                             imeis.add(new TextEditingController());
                                                             return InkWell(
                                                                 onTap:(){
-                                                                 },
+                                                                },
                                                                 child: Container(
                                                                   height: 80,
                                                                   child: TextFormField(
@@ -1073,26 +1101,27 @@ print(PONumber.text);
 
                                                                     ),
                                                                     onChanged: (val){
-                                                                          print(val);
+                                                                      print(val);
 
 
-                                                                          listofserialNums = val.split(',').map((e) => e).toList() ;
-                                                                          // var ime=val.split(',');
-                                                                          // print('this is ime $ime');
-                                                                          // //var contain = imeis[index].text.contains;
-                                                                          // var contain = listofserialNums.contains(ime);
-                                                                          // if(contain==true){
-                                                                          //
-                                                                          //   sameImei =!sameImei;
-                                                                          //
-                                                                          // }
-                                                                          // else{
-                                                                          //
-                                                                          //   sameImei =sameImei;
-                                                                          //
-                                                                          //
-                                                                          // }
-                                                                          imeis[index].text=listofserialNums.toString();
+                                                                      listofserialNums = val.split(',').map((e) => e).toList() ;
+                                                                      // var ime=val.split(',');
+                                                                      // print('this is ime $ime');
+                                                                      // //var contain = imeis[index].text.contains;
+                                                                      // var contain = listofserialNums.contains(ime);
+                                                                      // if(contain==true){
+                                                                      //
+                                                                      //   sameImei =!sameImei;
+                                                                      //
+                                                                      // }
+                                                                      // else{
+                                                                      //
+                                                                      //   sameImei =sameImei;
+                                                                      //
+                                                                      //
+                                                                      // }
+
+                                                                      imeis[index].text=listofserialNums.toString();
                                                                       print(imeis[index].text);
                                                                     },
                                                                     autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -1105,7 +1134,7 @@ print(PONumber.text);
                                                                       }
                                                                       else if(listofserialNums.length<double.parse(qtyNeed[index].text)){
                                                                         return 'Serial numbers min';
-                                                                       }
+                                                                      }
                                                                       // else if(sameImei=!sameImei){
                                                                       //   return 'Serial Numbers can not be same';
                                                                       //
@@ -1212,7 +1241,7 @@ print(PONumber.text);
                                   Map orderDetails = {
                                     'POLineID': POLineId[i].text,
                                     'ID': ID[i].text,
-                                    'CompanyID':companyID,
+                                    'CompanyID':companyID.toString(),
                                     'ItemCode': ic[i].text,
                                     'ItemID': icid[i].text,
                                     'ItemName': iN[i].text,
@@ -1221,12 +1250,12 @@ print(PONumber.text);
                                     'ItemType': ityp[i].text,
                                     'Qty': qtyNeed[i].text,
                                     'Amount': amountTotal[i].text,
-                                    'IMEI':ityp[i].text=='20'?serialNumber[i].text:null,
-                                    'ReceiptLineID': null,
-                                    'VendorBillLineID': null,
-                                    "IV_TrasactionLineID": null,
-                                    "ItemUOMID": null,
-                                    'BoxNumber':null,
+                                    'IMEI':IMEI[i].text,
+                                    'ReceiptLineID': ReceiptLineID[i].text,
+                                    'VendorBillLineID': VendorBillLineID[i].text,
+                                    "IV_TrasactionLineID": IV_TrasactionLineID[i].text,
+                                    "ItemUOMID": ItemUOMID[i].text,
+                                    'BoxNumber':BoxNumber[i].text,
                                   };
                                   orderList.add(orderDetails);
 
@@ -1235,26 +1264,26 @@ print(PONumber.text);
                                       .toString());
                                 }
                                 Map data = {
-                                  'WareHouseID': warehouseID,
-                                  'VendorID': vendor,
-                                  'POID': Po,
-                                  'ID': idx,
-                                  'ItemReceiptID': idx,
-                                  'TransactionID': '',
-                                  'BillID': billId,
+                                  'WareHouseID': warehouseID.toString(),
+                                  'VendorID': vendor.toString(),
+                                  'POID': Po.toString(),
+                                  'ID': idx.toString(),
+                                  'ItemReceiptID': idx.toString(),
+                                  'TransactionID': idx.toString(),
+                                  'BillID': billID.toString(),
                                   'ItemAmount': subTotal.text,
-                                  'TxnNumber': txnNum,
+                                  'TxnNumber': txnNum.toString(),
                                   "DepositDate": docdatee.text,
                                   "DocumentDate": docdatee.text,
                                   "DueDate": duedatee.text,
                                   "BillCredit": '',
                                   "IsIMEITracking": false,
                                   "MaiilingAddress": '',
-                                  "OriginalTxnNumber": txnNum,
-                                  "POTxnNumber": Po,
+                                  "OriginalTxnNumber": txnNum.toString(),
+                                  "POTxnNumber": Po.toString(),
                                   "TermID": paymentTermID,
-                                  "TransactionType": transTyp,
-                                  "VendorContactID": VendorContactID,
+                                  "TransactionType": transTyp.toString(),
+                                  "VendorContactID": VendorContactID.toString(),
                                   'PONumber': PONumber.text,
                                   'CompanyID': companyID,
                                   'WareHouseName': wareHouse.text,
@@ -1550,7 +1579,7 @@ print(PONumber.text);
   }
   Future<List<PurchaseOrderModel>> POFetch() async {
     final String ApiUrl2 = "http://test.erp.gold/api/Purchase/purchaseorder/GetPOList?vendorid=$vendor";
-print(ApiUrl2);
+    print(ApiUrl2);
     final Response2 = await http.get(Uri.parse(ApiUrl2), headers: {
       "token": "$CompanyAuthToken",
       "Username": "$email"
@@ -1566,7 +1595,7 @@ print(ApiUrl2);
   Future<List<RiItemModel>> getItemLine() async {
 
     idItem=Po;
-    log(idItem.toString());
+    print(idItem.runtimeType);
     final String ApiUrl2 = "http://test.erp.gold/api/Purchase/purchaseorder/PucrhaseOrderLineByPOID?id=$idItem";
     print(ApiUrl2);
     final Response2 = await http.get(Uri.parse(ApiUrl2), headers: {
@@ -1579,6 +1608,23 @@ print(ApiUrl2);
     });
     return list.map((e) => RiItemModel.fromJson(e)).toList();
 
+  }
+  Future<List<Map<String, dynamic>>> getItemLineforUpdate() async {
+
+    idItemUpd=billID;
+    print(idItemUpd.runtimeType);
+    final String ApiUrl2 = "http://test.erp.gold/api/Purchase/receivingtransaction/GetReceiptListByID?id=$idItemUpd";
+    print(ApiUrl2);
+    final Response2 = await http.get(Uri.parse(ApiUrl2), headers: {
+      "token": "$CompanyAuthToken",
+      "Username": "$email"
+    });
+    Map<String, dynamic> map = json.decode(Response2.body);
+    setState(() {
+      itemUpdateLineData =  map["ItemLine"];
+    });
+    //return list.map((e) => ReceiveInventorypdateItemModel.fromJson(e)).toList();
+    return List<Map<String, dynamic>>.from(json.decode(Response2.body)['ItemLine']);
   }
 
   Future pickDocDate(BuildContext context) async {
