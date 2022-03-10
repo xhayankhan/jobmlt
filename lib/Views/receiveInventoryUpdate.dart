@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:async';
 import 'dart:developer';
@@ -77,11 +78,13 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
   List itemData = [];
   List itemLineData = [];
   List itemUpdateLineData = [];
+  Map<String, dynamic> itemUpdateLineData2 = {};
   List<WarehouseModel> warehouseResponse = [];
   List<PaymentTermModel> responsePayment = [];
   Future? poResponse ;
   List<RiItemModel> itemLineJson=[];
   List<Map<String, dynamic>> itemUpdateLineJson=[];
+  Map<String, dynamic> itemUpdateLineJson2={};
   List<vendorModel> vendorJson = [];
 
   var ItemName = '',
@@ -174,13 +177,14 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
         log('this is the id ${idx.id.toString()}');
         txnNum=idx.txnNumber.toString();
         billID=idx.billId.toString();
+        refNumber.text=idx.refNumber.toString();
         vendorName.text = idx.vendorName.toString();
         vendor = idx.vendorId.toString();
         sum = idx.total;
         VendorContactID=idx.vendorContactId.toString();
         transTyp=idx.transactionType.toString();
         //others.text = idx.other.toString();
-        // PONumber.text = idx.poNumber.toString();
+         PONumber.text = idx.poNumber.toString();
         print(PONumber.text);
         companyID = idx.companyId.toString();
         docdatee.text = idx.txnDate.toString();
@@ -233,6 +237,8 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
         pofetch=true;
         //poResponse =  POFetch();
         itemUpdateLineJson = await getItemLineforUpdate();
+        itemUpdateLineJson2 = await getItemLineforUpdate2();
+        log(itemUpdateLineData2.toString());
         log(itemUpdateLineJson.toString());
         for (int i = 0; i < itemUpdateLineData.length; i++) {
           isOldItem = true;
@@ -280,6 +286,7 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
           ItemUOMID.add(new TextEditingController());
           VendorBillLineID.add(new TextEditingController());
           ReceiptLineID.add(new TextEditingController());
+
           ID[i].text=itemssData[i]['ID'].toString();
           ReceiptLineID[i].text=itemssData[i]['ReceiptLineID'].toString();
           VendorBillLineID[i].text=itemssData[i]['VendorBillLineID'].toString();
@@ -304,6 +311,8 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
             serialNumber.add(TextEditingController());
           }
         }
+
+
 
       }}); }
 
@@ -402,63 +411,85 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
 
                       Padding(
                         padding: const EdgeInsets.only(top: 10.0),
-                        child: DropdownButtonFormField(
-                          decoration: InputDecoration(
-                            errorText: vendor == null ? 'Field Required' : '',
-                            errorStyle: TextStyle(
-                                color:
-                                vendor == null ? Colors.red : Colors.black),
-                            //errorBorder:
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: const BorderRadius.all(
-                                const Radius.circular(10.0),
-                              ),
-                              borderSide: BorderSide(
-                                  color: vendor == null
-                                      ? Colors.red
-                                      : Colors.black),
-                            ),
+                        child: Builder(
+                          builder: (context) {
+                            if(isEditing==false) {
+                              return DropdownButtonFormField(
+                                decoration: InputDecoration(
+                                  errorText: vendor == null
+                                      ? 'Field Required'
+                                      : '',
+                                  errorStyle: TextStyle(
+                                      color:
+                                      vendor == null ? Colors.red : Colors
+                                          .black),
+                                  //errorBorder:
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius: const BorderRadius.all(
+                                      const Radius.circular(10.0),
+                                    ),
+                                    borderSide: BorderSide(
+                                        color: vendor == null
+                                            ? Colors.red
+                                            : Colors.black),
+                                  ),
 
-                            filled: true,
-                            hintStyle: TextStyle(color: Colors.grey[800]),
-                            labelText: "Vendor",
-                          ),
-                          items: vendorData.map((itms) {
-                            return new DropdownMenuItem(
-                              onTap: () async{
-                                vendorName.text = itms["VendorName"];
+                                  filled: true,
+                                  hintStyle: TextStyle(color: Colors.grey[800]),
+                                  labelText: "Vendor",
+                                ),
+                                items: vendorData.map((itms) {
+                                  return new DropdownMenuItem(
+                                    onTap: () async {
+                                      vendorName.text = itms["VendorName"];
 
-                                print(vendorName);
-                              },
-                              child: new Text(
-                                itms["VendorName"],
-                              ),
-                              value: itms["ID"].toString(),
-                            );
-                          }).toList(),
-                          onChanged: (itm) async{
+                                      print(vendorName);
+                                    },
+                                    child: new Text(
+                                      itms["VendorName"],
+                                    ),
+                                    value: itms["ID"].toString(),
+                                  );
+                                }).toList(),
+                                onChanged: (itm) async {
+                                  setState(() {
+                                    Po = null;
+                                    vendor = itm as String?;
+                                    if (itemssData.isNotEmpty) {
+                                      for (int i = 0; i <
+                                          itemssData.length; i++) {
+                                        itemssData.removeAt(i);
+                                      }
+                                    }
+                                    print(vendor);
+                                  });
 
-                            setState(() {
-                              Po=null;
-                              vendor = itm as String?;
-                              if(itemssData.isNotEmpty){
-                                for(int i =0 ; i<itemssData.length;i++){
-                                  itemssData.removeAt(i);}
-                              }
-                              print(vendor);
-                            });
-
-                            poResponse =  POFetch();
-                            pofetch=false;
-
-
-                          },
-                          value: vendor,
+                                  poResponse = POFetch();
+                                  pofetch = false;
+                                },
+                                value: vendor,
+                              );
+                            }
+                            else{
+                              return TextFormField(
+                                readOnly: true,
+                                  decoration: InputDecoration(labelText: 'Vendor',
+                                    border: OutlineInputBorder(
+                                      borderRadius: const BorderRadius.all(
+                                        const Radius.circular(10.0),
+                                      ),
+                                    ),
+                                    filled: true,
+                                  ),
+                                controller: vendorName,
+                              );
+                            }
+                          }
                         ),
                       ),
                       Builder(
                           builder: (context) {
-                            if(vendor!=null){
+                            if(vendor!=null&&isEditing==false){
                               return FutureBuilder(
 
                                 //future: poResponse,
@@ -624,6 +655,23 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                     }
                                   });
                             }
+                            else if(isEditing){
+                              return Padding(
+                                padding: const EdgeInsets.only(top:12.0),
+                                child: TextFormField(
+                                  readOnly: true,
+                                  decoration: InputDecoration(labelText: 'Purchase Order',
+                                    border: OutlineInputBorder(
+                                      borderRadius: const BorderRadius.all(
+                                        const Radius.circular(10.0),
+                                      ),
+                                    ),
+                                    filled: true,
+                                  ),
+                                  controller: PONumber,
+                                ),
+                              );
+                            }
                             else {
                               return Text('');
                             }
@@ -742,48 +790,71 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                       ),
                       Padding(
                         padding: const EdgeInsets.only(top: 10.0),
-                        child: DropdownButtonFormField(
-                          decoration: InputDecoration(
-                            errorText:
-                            warehouseID == null ? 'Field Required' : '',
-                            errorStyle: TextStyle(
-                                color: warehouseID == null
-                                    ? Colors.red
-                                    : Colors.black),
-                            //errorBorder:
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: const BorderRadius.all(
-                                const Radius.circular(10.0),
-                              ),
-                              borderSide: BorderSide(
-                                  color: warehouseID == null
-                                      ? Colors.red
-                                      : Colors.black),
-                            ),
-                            filled: true,
-                            hintStyle: TextStyle(color: Colors.grey[800]),
-                            labelText: "WareHouse/Site Location",
-                          ),
-                          items: wareHdata.map((item) {
-                            return new DropdownMenuItem(
-                              onTap: () {
-                                wareHouse.text = item['WarehouseName'];
-                                print(wareHouse.text);
-                              },
-                              child: new Text(
-                                item['WarehouseName'],
-                              ),
-                              value: item["ID"].toString(),
-                            );
-                          }).toList(),
-                          onChanged: (itm) {
-                            setState(() {
-                              warehouseID = itm as String?;
+                        child: Builder(
+                          builder: (context) {
+                            if(isEditing==false) {
+                              return DropdownButtonFormField(
+                                decoration: InputDecoration(
+                                  errorText:
+                                  warehouseID == null ? 'Field Required' : '',
+                                  errorStyle: TextStyle(
+                                      color: warehouseID == null
+                                          ? Colors.red
+                                          : Colors.black),
+                                  //errorBorder:
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius: const BorderRadius.all(
+                                      const Radius.circular(10.0),
+                                    ),
+                                    borderSide: BorderSide(
+                                        color: warehouseID == null
+                                            ? Colors.red
+                                            : Colors.black),
+                                  ),
+                                  filled: true,
+                                  hintStyle: TextStyle(color: Colors.grey[800]),
+                                  labelText: "WareHouse/Site Location",
+                                ),
+                                items: wareHdata.map((item) {
+                                  return new DropdownMenuItem(
+                                    onTap: () {
+                                      wareHouse.text = item['WarehouseName'];
+                                      print(wareHouse.text);
+                                    },
+                                    child: new Text(
+                                      item['WarehouseName'],
+                                    ),
+                                    value: item["ID"].toString(),
+                                  );
+                                }).toList(),
+                                onChanged: (itm) {
+                                  setState(() {
+                                    warehouseID = itm as String?;
 
-                              print(warehouseID);
-                            });
-                          },
-                          value: warehouseID,
+                                    print(warehouseID);
+                                  });
+                                },
+                                value: warehouseID,
+                              );
+                            }
+                          else{
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: TextFormField(
+                                  readOnly: true,
+                                  decoration: InputDecoration(labelText: 'WareHouse/Site Location',
+                                    border: OutlineInputBorder(
+                                      borderRadius: const BorderRadius.all(
+                                        const Radius.circular(10.0),
+                                      ),
+                                    ),
+                                    filled: true,
+                                  ),
+                                  controller: wareHouse,
+                                ),
+                              );
+                            }
+                  }
                         ),
                       ),
                       Padding(
@@ -931,7 +1002,7 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                                         keyboardType: TextInputType
                                                             .number,
                                                         onChanged: (val) {
-
+                                                          val= val.isEmpty?'0.0':val;
                                                           double a = double.parse(rt[index].text); // this is the value in my first text field (This is the percentage rate i intend to use)
                                                           double b = val.isEmpty?0:double.parse(val); // this is my second text field
                                                           double c = a * b; //do your calculation
@@ -1003,8 +1074,17 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                                               labelText: 'Unit Price'
 
                                                           ),
-                                                          onChanged: (val) {
+                                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                          validator: (value){
 
+                                                            if(value == null || value.isEmpty || value=='0')
+                                                            { return "Cannot be empty or )";}
+                                                            else {
+                                                              return null;
+                                                            }
+                                                          },
+                                                          onChanged: (val) {
+                                                            val= val.isEmpty?'0.0':val;
                                                             double a = double
                                                                 .parse(
                                                                 val); // this is the value in my first text field (This is the percentage rate i intend to use)
@@ -1210,19 +1290,18 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                         child: Center(
                           child: InkWell(
                             onTap: () async {
-                              wareHouse.text=wareHouse.text.isEmpty?'':wareHouse.text;
-                              warehouseID=warehouseID==null?'':warehouseID;
-                              paymentterm.text=paymentterm.text.isEmpty?'':paymentterm.text;
-                              paymentTermID=paymentTermID==null?'':paymentTermID;
 
-                              if (orderList.isEmpty&&itemLineData.isEmpty) {
+
+
+
+                              if (billchck==null) {
                                 showDialog(
                                     context: context,
                                     builder: (_) =>
                                         AlertDialog(
                                           title: Text('Error Occurred'),
                                           content: Text(
-                                              "Please Select a Item and it's Quantity"),
+                                              "Please Select if this is Receipt or Receipt and Bill "),
                                           actions: <Widget>[
 
                                             ElevatedButton(
@@ -1235,7 +1314,65 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                           ],
                                         )
                                 );
+                              }else if (vendor == null) {
+                                showDialog(
+                                    context: context,
+                                    builder: (_) =>
+                                        AlertDialog(
+                                          title: Text('Error Occurred'),
+                                          content: Text('Please Select a Vendor'),
+                                          actions: <Widget>[
+                                            ElevatedButton(
+                                              child: Text('Ok'),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                            )
+                                          ],
+                                        )
+                                );
                               }
+                              else if (Po == null) {
+                                showDialog(
+                                    context: context,
+                                    builder: (_) =>
+                                        AlertDialog(
+                                          title: Text('Error Occurred'),
+                                          content: Text('Please Select a Purchase Order'),
+                                          actions: <Widget>[
+                                            ElevatedButton(
+                                              child: Text('Ok'),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                            )
+                                          ],
+                                        )
+                                );
+                              }
+
+                              else if (warehouseID == null) {
+                                showDialog(
+                                    context: context,
+                                    builder: (_) =>
+                                        AlertDialog(
+                                          title: Text('Error Occurred'),
+                                          content: Text(
+                                              'Please Select a Ware House'),
+                                          actions: <Widget>[
+                                            ElevatedButton(
+                                              child: Text('Ok'),
+                                              onPressed: () {
+                                                Navigator.of(context)
+                                                    .pop();
+                                              },
+                                            )
+                                          ],
+                                        )
+                                );
+                              }
+
+
                               if (isEditing) {
                                 for(int i =0;i<itemssData.length;i++){
                                   Map orderDetails = {
@@ -1247,15 +1384,15 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                     'ItemName': iN[i].text,
                                     'Description': des[i].text,
                                     'Rate': rt[i].text,
-                                    'ItemType': ityp[i].text,
                                     'Qty': qtyNeed[i].text,
                                     'Amount': amountTotal[i].text,
-                                    'IMEI':IMEI[i].text,
                                     'ReceiptLineID': ReceiptLineID[i].text,
                                     'VendorBillLineID': VendorBillLineID[i].text,
                                     "IV_TrasactionLineID": IV_TrasactionLineID[i].text,
                                     "ItemUOMID": ItemUOMID[i].text,
                                     'BoxNumber':BoxNumber[i].text,
+                                    'ItemType': ityp[i].text,
+                                    'IMEI':ityp[i].text=='20'?IMEI[i].text:null,
                                   };
                                   orderList.add(orderDetails);
 
@@ -1263,69 +1400,53 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                   print(orderDetails
                                       .toString());
                                 }
+                                var poid=itemUpdateLineData2['POID'];
+                                var id=itemUpdateLineData2['ID'];
+                                var ItemReceiptID=itemUpdateLineData2['ItemReceiptID'];
+                                var TransactionID=itemUpdateLineData2['TransactionID'];
+                                var BillID=itemUpdateLineData2['BillID'];
+                                var DepositDate=itemUpdateLineData2['DepositDate'];
+                                var BillCredit=itemUpdateLineData2['BillCredit'];
+                                var IsIMEITracking=itemUpdateLineData2['IsIMEITracking'];
+                                var MaiilingAddress=itemUpdateLineData2['MaiilingAddress'];
+                                var OriginalTxnNumber=itemUpdateLineData2['OriginalTxnNumber'];
+                                var TermID=itemUpdateLineData2['TermID'];
+                                var TransactionType=itemUpdateLineData2['TransactionType'];
+                                var VendorContactID=itemUpdateLineData2['VendorContactID'];
+                                var AmountDue=itemUpdateLineData2['AmountDue'];
                                 Map data = {
                                   'WareHouseID': warehouseID.toString(),
                                   'VendorID': vendor.toString(),
-                                  'POID': Po.toString(),
-                                  'ID': idx.toString(),
-                                  'ItemReceiptID': idx.toString(),
-                                  'TransactionID': idx.toString(),
-                                  'BillID': billID.toString(),
+                                  'POID': poid.toString(),
+                                  'ID': id.toString(),
+                                  'ItemReceiptID': ItemReceiptID.toString(),
+                                  'TransactionID': TransactionID.toString(),
+                                  'BillID': BillID.toString(),
                                   'ItemAmount': subTotal.text,
                                   'TxnNumber': txnNum.toString(),
-                                  "DepositDate": docdatee.text,
+                                  "DepositDate": DepositDate.toString(),
                                   "DocumentDate": docdatee.text,
                                   "DueDate": duedatee.text,
-                                  "BillCredit": '',
-                                  "IsIMEITracking": false,
-                                  "MaiilingAddress": '',
-                                  "OriginalTxnNumber": txnNum.toString(),
+                                  "BillCredit": BillCredit.toString(),
+                                  "IsIMEITracking": IsIMEITracking,
+                                  "MaiilingAddress": MaiilingAddress.toString(),
+                                  "OriginalTxnNumber": OriginalTxnNumber.toString(),
                                   "POTxnNumber": Po.toString(),
-                                  "TermID": paymentTermID,
-                                  "TransactionType": transTyp.toString(),
+                                  "TermID": TermID.toString(),
+                                  "TransactionType": TransactionType.toString(),
                                   "VendorContactID": VendorContactID.toString(),
                                   'PONumber': PONumber.text,
                                   'CompanyID': companyID,
                                   'WareHouseName': wareHouse.text,
                                   'Total': total.text,
                                   'BillTotal': total.text,
-                                  'AmountDue': total.text,
+                                  'AmountDue': AmountDue.toString(),
                                   'RefNo': refNumber.text,
                                   'WorkOrderNumber': workOrderNumber.text,
                                   'Memo': memo.text,
                                   'ItemLine': orderList
                                 };
-                                // Map data = {
-                                //   'CompanyID':companyID,
-                                //   'ID': idx.iD.toString(),
-                                //   'DueDate': duedatee.text,
-                                //   'ChangeShpippingAddress': false,
-                                //   'DueDateRequired': false,
-                                //   'AdvanceInventory': false,
-                                //   'ShippingMethodRequired': false,
-                                //   'IMEITracking': false,
-                                //   'POStatus': poStatus.text,
-                                //   'ShipToCity': '',
-                                //   'ShipToCountry': '',
-                                //   'ShipToState': '',
-                                //   'ShipToStreetAddress': '',
-                                //   'ShipToVendorName': '',
-                                //   'ShipToZipCode': '',
-                                //   'SubTotal': subTotal.text,
-                                //   'Total': subTotal.text,
-                                //   'ShipID':  cstmrz.toString(),
-                                //   'PaymentTermName': paymentterm.text,
-                                //   'PaymentTermID': paymentTermID,
-                                //   'ShippingMethod': shippingmethodID,
-                                //   'TransactionDate': docdatee.text,
-                                //   'TransactionNumber': idx.transactionNumber.toString(),
-                                //   'VendorID': vendor,
-                                //   'WareHouseID': warehouseID,
-                                //   'WorkOrderNumber': workOrderNumber.text,
-                                //   'Memo': memo.text,
-                                //   'Message': customerMsg.text,
-                                //   'ItemDetail': orderList,
-                                // };
+
 
                                 print("" + data.toString());
                                 final result1 = await updateRI(idx.id, data);
@@ -1371,66 +1492,31 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                   print(orderDetails
                                       .toString());
                                 }
-                                if (vendor == null) {
-                                  showDialog(
-                                      context: context,
-                                      builder: (_) =>
-                                          AlertDialog(
-                                            title: Text('Error Occurred'),
-                                            content: Text('Please Select a Vendor'),
-                                            actions: <Widget>[
-                                              ElevatedButton(
-                                                child: Text('Ok'),
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                              )
-                                            ],
-                                          )
-                                  );
-                                }
-                                else if (warehouseID == null) {
-                                  showDialog(
-                                      context: context,
-                                      builder: (_) =>
-                                          AlertDialog(
-                                            title: Text('Error Occurred'),
-                                            content: Text(
-                                                'Please Select a Ware House'),
-                                            actions: <Widget>[
-                                              ElevatedButton(
-                                                child: Text('Ok'),
-                                                onPressed: () {
-                                                  Navigator.of(context)
-                                                      .pop();
-                                                },
-                                              )
-                                            ],
-                                          )
-                                  );
-                                }
-                                else if (orderList.isEmpty) {
-                                  showDialog(
-                                      context: context,
-                                      builder: (_) =>
-                                          AlertDialog(
-                                            title: Text('Error Occurred'),
-                                            content: Text(
-                                                "Please Select a Item and it's Quantity"),
-                                            actions: <Widget>[
 
-                                              ElevatedButton(
-                                                child: Text('Ok'),
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                              ),
 
-                                            ],
-                                          )
-                                  );
-                                }
-                                else if (orderList.isNotEmpty) {
+                                //  if (orderList.isEmpty) {
+                                //   showDialog(
+                                //       context: context,
+                                //       builder: (_) =>
+                                //           AlertDialog(
+                                //             title: Text('Error Occurred'),
+                                //             content: Text(
+                                //                 "Please Select a Item and it's Quantity"),
+                                //             actions: <Widget>[
+                                //
+                                //               ElevatedButton(
+                                //                 child: Text('Ok'),
+                                //                 onPressed: () {
+                                //                   Navigator.of(context).pop();
+                                //                 },
+                                //               ),
+                                //
+                                //             ],
+                                //           )
+                                //   );
+                                // }
+                                // else
+                                if (orderList.isNotEmpty) {
                                   Map data = {
                                     'SubTotal': subTotal.text,
                                     'Total': subTotal.text,
@@ -1451,25 +1537,7 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                     'Memo': memo.text,
                                     'ItemLine': orderList,
                                   };
-                                  // data = {
-                                  //   'WareHouseID': wareHouseID,
-                                  //   'WareHouseName': _siteLocationController.text,
-                                  //   'Total': _totalController.text,
-                                  //   'VendorID': vendorID,
-                                  //   'POID': poID,
-                                  //   'TermID': termID,
-                                  //   'DocumentDate': _docDateController.text,
-                                  //   'DueDate': _dueDateController.text,
-                                  //   'ItemAmount': _itemAmountController.text,
-                                  //   'BillTotal': _totalController.text,
-                                  //   'AmountDue': _billDueController.text,
-                                  //   'TransactionType': 'RCT',
-                                  //   'BillCredit': isBill ? 3 : 4,
-                                  //   'RefNo': _referenceController.text,
-                                  //   'WorkOrderNumber': _workOrderNumberController.text,
-                                  //   'Memo': _memoController.text,
-                                  //   'ItemLine': itemDetailList,
-                                  // };
+
 
                                   print("" + data.toString());
                                   final result = await addReceiveInv(data);
@@ -1481,7 +1549,7 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                           AlertDialog(
                                             title: Text('Success'),
                                             content: Text(
-                                                'Purchase Order Created Successfully'),
+                                                'Receive Inventory Created Successfully'),
                                             actions: <Widget>[
                                               ElevatedButton(
                                                 child: Text('Ok'),
@@ -1626,6 +1694,25 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
     //return list.map((e) => ReceiveInventorypdateItemModel.fromJson(e)).toList();
     return List<Map<String, dynamic>>.from(json.decode(Response2.body)['ItemLine']);
   }
+  Future<Map<String, dynamic>> getItemLineforUpdate2() async {
+
+    idItemUpd=billID;
+    print(idItemUpd.runtimeType);
+    final String ApiUrl2 = "http://test.erp.gold/api/Purchase/receivingtransaction/GetReceiptListByID?id=$idItemUpd";
+    print(ApiUrl2);
+    final Response2 = await http.get(Uri.parse(ApiUrl2), headers: {
+      "token": "$CompanyAuthToken",
+      "Username": "$email"
+    });
+    Map<String, dynamic> map = json.decode(Response2.body);
+
+
+    setState(() {
+      itemUpdateLineData2 =  map;
+    });
+    //return list.map((e) => ReceiveInventorypdateItemModel.fromJson(e)).toList();
+    return Map<String, dynamic>.from(json.decode(Response2.body));
+  }
 
   Future pickDocDate(BuildContext context) async {
     final newDocDate = await showDatePicker(
@@ -1692,7 +1779,10 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
     if (response.statusCode == 200) {
       print(jsonDecode(response.body));
       return RecieveInventoryModel.fromJson(jsonDecode(response.body));
-    } else {
+    }
+
+      else
+     {
       throw Exception('Failed to Update Invoice.');
     }
   }

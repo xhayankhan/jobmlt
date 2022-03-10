@@ -15,7 +15,7 @@ CustomTextField({  required this.labelText, required this.controllers});
 
         // controller: customerName.text=i.customerName==null?'':i.customerName,
         //initialValue: i.customerName.toString(),
-        style: TextStyle(fontWeight: FontWeight.bold),
+        style: TextStyle(),
         decoration: InputDecoration(labelText: labelText,
       border: OutlineInputBorder(
       borderRadius: const BorderRadius.all(
