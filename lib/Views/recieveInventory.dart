@@ -178,7 +178,7 @@ class recieveInventoryState extends State<recieveInventory> {
                                       child: Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
-                                          'PO #: ${items[index].poNumber
+                                          'TXN #: ${items[index].txnNumber
                                               .toString()}',
                                           style: TextStyle(
                                             color: Colors.redAccent,

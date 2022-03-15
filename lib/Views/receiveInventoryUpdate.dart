@@ -545,7 +545,7 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                               }
                                               print(Po);
                                             });
-                                            if(itemLineData.isNotEmpty||isEditing==false) {
+                                            if(isEditing==false) {
                                               print("its running nowww");
                                               itemLineJson = await getItemLine();
 
@@ -894,7 +894,7 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                       Builder(
                           builder: (context) {
 
-                            if (Po==null || itemssData.isEmpty) {
+                            if (Po==null || itemssData.isEmpty||itemUpdateLineData[0]['ItemCode']==null) {
                               return Text('');
                             } else {
                               return ListView.builder(
@@ -1294,84 +1294,6 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
 
 
 
-                              if (billchck==null) {
-                                showDialog(
-                                    context: context,
-                                    builder: (_) =>
-                                        AlertDialog(
-                                          title: Text('Error Occurred'),
-                                          content: Text(
-                                              "Please Select if this is Receipt or Receipt and Bill "),
-                                          actions: <Widget>[
-
-                                            ElevatedButton(
-                                              child: Text('Ok'),
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                            ),
-
-                                          ],
-                                        )
-                                );
-                              }else if (vendor == null) {
-                                showDialog(
-                                    context: context,
-                                    builder: (_) =>
-                                        AlertDialog(
-                                          title: Text('Error Occurred'),
-                                          content: Text('Please Select a Vendor'),
-                                          actions: <Widget>[
-                                            ElevatedButton(
-                                              child: Text('Ok'),
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                            )
-                                          ],
-                                        )
-                                );
-                              }
-                              else if (Po == null) {
-                                showDialog(
-                                    context: context,
-                                    builder: (_) =>
-                                        AlertDialog(
-                                          title: Text('Error Occurred'),
-                                          content: Text('Please Select a Purchase Order'),
-                                          actions: <Widget>[
-                                            ElevatedButton(
-                                              child: Text('Ok'),
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                            )
-                                          ],
-                                        )
-                                );
-                              }
-
-                              else if (warehouseID == null) {
-                                showDialog(
-                                    context: context,
-                                    builder: (_) =>
-                                        AlertDialog(
-                                          title: Text('Error Occurred'),
-                                          content: Text(
-                                              'Please Select a Ware House'),
-                                          actions: <Widget>[
-                                            ElevatedButton(
-                                              child: Text('Ok'),
-                                              onPressed: () {
-                                                Navigator.of(context)
-                                                    .pop();
-                                              },
-                                            )
-                                          ],
-                                        )
-                                );
-                              }
-
 
                               if (isEditing) {
                                 for(int i =0;i<itemssData.length;i++){
@@ -1447,7 +1369,28 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                   'ItemLine': orderList
                                 };
 
+                              if (billchck==null) {
+                              showDialog(
+                              context: context,
+                              builder: (_) =>
+                              AlertDialog(
+                              title: Text('Error Occurred'),
+                              content: Text(
+                              "Please Select if this is Receipt or Receipt and Bill "),
+                              actions: <Widget>[
 
+                              ElevatedButton(
+                              child: Text('Ok'),
+                              onPressed: () {
+                              Navigator.of(context).pop();
+                              },
+                              ),
+
+                              ],
+                              )
+                              );
+                              }
+                              else{
                                 print("" + data.toString());
                                 final result1 = await updateRI(idx.id, data);
 
@@ -1469,7 +1412,7 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                       ],
                                     )
                                 );
-                              }
+                              }}
 
                               else if (isEditing == false) {
                                 for(int i =0;i<itemssData.length;i++){
@@ -1494,28 +1437,65 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                                 }
 
 
-                                //  if (orderList.isEmpty) {
-                                //   showDialog(
-                                //       context: context,
-                                //       builder: (_) =>
-                                //           AlertDialog(
-                                //             title: Text('Error Occurred'),
-                                //             content: Text(
-                                //                 "Please Select a Item and it's Quantity"),
-                                //             actions: <Widget>[
-                                //
-                                //               ElevatedButton(
-                                //                 child: Text('Ok'),
-                                //                 onPressed: () {
-                                //                   Navigator.of(context).pop();
-                                //                 },
-                                //               ),
-                                //
-                                //             ],
-                                //           )
-                                //   );
-                                // }
-                                // else
+                                if (vendor == null) {
+                                  showDialog(
+                                      context: context,
+                                      builder: (_) =>
+                                          AlertDialog(
+                                            title: Text('Error Occurred'),
+                                            content: Text('Please Select a Vendor'),
+                                            actions: <Widget>[
+                                              ElevatedButton(
+                                                child: Text('Ok'),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                              )
+                                            ],
+                                          )
+                                  );
+                                }
+                                else if (Po == null) {
+                                  showDialog(
+                                      context: context,
+                                      builder: (_) =>
+                                          AlertDialog(
+                                            title: Text('Error Occurred'),
+                                            content: Text('Please Select a Purchase Order'),
+                                            actions: <Widget>[
+                                              ElevatedButton(
+                                                child: Text('Ok'),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                              )
+                                            ],
+                                          )
+                                  );
+                                }
+
+                                else if (warehouseID == null) {
+                                  showDialog(
+                                      context: context,
+                                      builder: (_) =>
+                                          AlertDialog(
+                                            title: Text('Error Occurred'),
+                                            content: Text(
+                                                'Please Select a Ware House'),
+                                            actions: <Widget>[
+                                              ElevatedButton(
+                                                child: Text('Ok'),
+                                                onPressed: () {
+                                                  Navigator.of(context)
+                                                      .pop();
+                                                },
+                                              )
+                                            ],
+                                          )
+                                  );
+                                }
+
+
                                 if (orderList.isNotEmpty) {
                                   Map data = {
                                     'SubTotal': subTotal.text,
@@ -1710,6 +1690,7 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
     setState(() {
       itemUpdateLineData2 =  map;
     });
+
     //return list.map((e) => ReceiveInventorypdateItemModel.fromJson(e)).toList();
     return Map<String, dynamic>.from(json.decode(Response2.body));
   }
