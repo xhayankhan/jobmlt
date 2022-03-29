@@ -1,17 +1,67 @@
+import 'dart:convert';
+import 'package:get/get_navigation/src/snackbar/snack.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
-
+import 'package:jobmlt/Models/imeiModel.dart';
+import 'dart:async';
+import 'dart:developer';
+import 'package:async/async.dart';
 class addImei extends StatefulWidget {
-  const addImei({Key? key}) : super(key: key);
+
+  String id,email,CAT,listLength,warehouseid,BinLocationID;
+  List imeiList=[];
+   addImei({Key? key,required this.id,required this.email,required this.CAT,required this.imeiList,required this.listLength,required this.warehouseid,required this.BinLocationID}) : super(key: key);
 
   @override
-  _addImeiState createState() => _addImeiState();
+  _addImeiState createState() => _addImeiState(id,email,CAT,imeiList,listLength,warehouseid,BinLocationID);
 }
 
 class _addImeiState extends State<addImei> {
-  List<TextEditingController> imeis=[];
-  //TextEditingController imeis=new TextEditingController();
+
+  String id,email,CAT,listLength,warehouseid,BinLocationID;
+  List imeiList=[];
+  _addImeiState(this.id,this.email,this.CAT,this.imeiList,this.listLength,this.warehouseid,this.BinLocationID);
+
+
+  TextEditingController imei=new TextEditingController();
+  List imeiData=[];
+  List itemssData=[];
+  List <Imeidata> imeiJson=[];
+  final AsyncMemoizer _memoizer = AsyncMemoizer();
+  var done = false;
+
+  var listCom=false;
+List imeis=[];
+
+
+@override
+    _fetchImei() async{
+  return this._memoizer.runOnce(() async {
+    await Future.delayed(Duration(seconds: 2));
+    imeiJson = await imeiListResponse();
+
+  for (int i = 0; i < imeiData.length; i++) {
+    if(imeiData[i]['WarehouseID'].toString()==warehouseid.toString()&&imeiData[i]['BinLocationID'].toString()==BinLocationID.toString())
+      {
+        print('this page ${imeiData[i]['BinLocationID'].toString()}');
+        print('from page ${BinLocationID.toString()}');
+        Map mapItem = {
+          'sIMEI': imeiData[i]['sIMEI'],
+        };
+        itemssData.add(mapItem);
+        imeis.add(imeiData[i]['sIMEI'].toString());
+      }
+  }
+  print(itemssData);
+  if(imeiList.length>=double.parse(listLength)){
+    listCom=true;
+  }
+print(imeis);
+done=true;
+  });}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,37 +89,83 @@ class _addImeiState extends State<addImei> {
                         fontSize: 20,
                       ),),
                   ),),
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: 3,
+                FutureBuilder(
 
-                  itemBuilder: (context,index) {
-                    if(imeis.isEmpty){
-                      imeis.add(new TextEditingController());
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          child: TextFormField(
-                            controller: imeis[index],
-                          ),
-                          width: 100,
-                        ),
-                        Container(
-                          child: IconButton(onPressed: (){
-                              imeis;
-                            }, icon: Icon(Icons.clear )),
-                          width: 100,
-                        ),
+                    future: _fetchImei(),
+                    builder: (context,data) {
+                      if (data.hasError) {
+                        return Center(child: Text("${data.error}"));
+                      } else if (done == true) {
+                        return ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: imeiList.length,
+                            itemBuilder: (context, index) {
+                              return Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 8.0,right: 8),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Expanded(child: Text('${imeiList[index]}',style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 18,
+                                          ),)),
+                                          Container(child: IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                imeiList.removeAt(index);
+                                                //imeiList.remove(imeiList[index]);
+                                              });
+                                            },
+                                            icon: Icon(Icons.clear),
+                                          ))
+                                        ],
+                                      ),
+                                    ),
 
-                      ],
-                    );}
-                    else{
-                      return Text('hiiiiii');
+                                  ],
+                              );
+                            }
+
+                        );
+                      } else {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
                     }
+                ),
+                Builder(
+                  builder: (context) {
+                    if(done==true&&listCom==false) {
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'IMEI',
+                              border: OutlineInputBorder(
+                                borderRadius: const BorderRadius.all(
+                                  const Radius.circular(10.0),
+                                ),
+                              ),
+                              filled: true,
+                            ),
+                            controller: imei,
+                          ),
+                        ),
+                      );
+                    }
+                    else if(listCom==true){
+                      return Text('IMEIs are equal to the Transfer Quantity');
+                    }
+                    else{
+                      return (Text(''));
+                    }
+
                   }
                 ),
-
 
                 Expanded(child: Divider(height: 10,)),
                 Padding(
@@ -80,7 +176,8 @@ class _addImeiState extends State<addImei> {
                     children: [
                       Expanded(
                         child: InkWell(
-                        onTap: (){Get.back();},
+                        onTap: (){Navigator.pop(context,
+                            );},
                         child: Center(
                           child: Text(
                             'Close',
@@ -101,7 +198,45 @@ class _addImeiState extends State<addImei> {
                               borderRadius: BorderRadius.circular(10)
                           ),
                           child: InkWell(
-                            onTap: (){Get.back();},
+                            onTap: (){
+                              //var myListFiltered = imeis.where((e) => e == imei.text);
+                              var myListFiltered = imeis.contains(imei.text);
+                              var checksame=imeiList.contains(imei.text);
+                              if (myListFiltered==true && checksame==false) {
+                                Navigator.pop(context,
+                                    imei.text);
+                              } else if(myListFiltered==false){
+                                Get.snackbar(
+                                    'IMEI not found',
+                                    '',
+                                    icon: Icon(
+                                        Icons.person, color: Colors.white),
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    backgroundColor: Colors.red,
+                                    duration: Duration(seconds: 2)
+
+                                );
+                              }
+                              else if(checksame==true){
+                                Get.snackbar(
+                                    'IMEI already exists in the list',
+                                    '',
+                                    icon: Icon(
+                                        Icons.person, color: Colors.white),
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    backgroundColor: Colors.red,
+                                    duration: Duration(seconds: 2)
+
+                                );
+                              }
+
+                              print(checksame);
+
+
+
+
+
+                              },
                             child: Center(
                               child: Text(
                                 'Save',
@@ -125,168 +260,17 @@ class _addImeiState extends State<addImei> {
       ),
     );
   }
+  Future<List<Imeidata>> imeiListResponse() async {
+    final String ApiUrl2 = "http://test.erp.gold/api/general/GET_IMEI?itemid=$id";
+print(ApiUrl2);
+    final Response2 = await http.get(Uri.parse(ApiUrl2), headers: {
+      "token": "$CAT",
+      "Username": "$email"
+    });
+    final list = json.decode(Response2.body) as List<dynamic>;
+    setState(() {
+      imeiData = list;
+    });
+    return list.map((e) => Imeidata.fromJson(e)).toList();
+  }
 }
-// import 'package:flutter/material.dart';
-//
-// final Color darkBlue = Color.fromARGB(255, 18, 32, 47);
-//
-//
-// class ListData extends StatefulWidget {
-//   @override
-//   _ListDataState createState() => _ListDataState();
-// }
-//
-// class _ListDataState extends State<ListData> {
-//   final List<List<String>> dataList = [
-//     <String>['Rose', 'SunFlower'],
-//     <String>['SUV', 'CityCar', 'Jeep'],
-//   ];
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text('Data List'),
-//       ),
-//       body: ListView(
-//         children: ListTile.divideTiles(
-//           context: context,
-//           tiles: dataList.map(
-//                 (list) {
-//               return ListTile(
-//                   leading: CircleAvatar(
-//                     child: Text('${list.length}'),
-//                   ),
-//                   title: Text(list.join(', ')),
-//                   onTap: () async {
-//                     final editData = await Navigator.push(
-//                       context,
-//                       MaterialPageRoute(
-//                         builder: (context) => Form(data: list),
-//                         fullscreenDialog: true,
-//                       ),
-//                     );
-//
-//                     if (editData != null) {
-//                       final index = dataList.indexOf(list);
-//
-//                       if (index != -1) {
-//                         setState(() {
-//                           dataList[index] = editData;
-//                         });
-//                       }
-//                     }
-//                   });
-//             },
-//           ),
-//         ).toList(),
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         onPressed: () async {
-//           final newData = await Navigator.push(
-//             context,
-//             MaterialPageRoute(
-//               builder: (context) => Form(),
-//               fullscreenDialog: true,
-//             ),
-//           );
-//
-//           if (newData != null) {
-//             setState(() {
-//               dataList.add(newData);
-//             });
-//           }
-//         },
-//         child: Icon(Icons.add),
-//       ),
-//     );
-//   }
-// }
-//
-// class Form extends StatefulWidget {
-//   final List<String> data;
-//
-//   Form({List<String>? data}) : data = data ?? <String>[];
-//
-//   @override
-//   _FormState createState() => _FormState();
-// }
-//
-// class _FormState extends State<Form> {
-//   List<TextEditingController> controllers=[];
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//
-//     setState(() {
-//       if (widget.data.isNotEmpty) {
-//         controllers = widget.data.map((s) {
-//           return TextEditingController(text: s);
-//         }).toList();
-//       } else {
-//         controllers = [];
-//       }
-//     });
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Form'), actions: [
-//         IconButton(
-//           icon: Icon(Icons.save),
-//           onPressed: () {
-//             if (controllers.isEmpty) {
-//               print('Data is empty, cannot saved');
-//               return;
-//             }
-//
-//             final list = controllers.map((c) => c.text).toList();
-//             Navigator.pop(context, list);
-//           },
-//         ),
-//       ]),
-//       body: controllers == null
-//           ? CircularProgressIndicator()
-//           : ListView(
-//         children: controllers.map((controller) {
-//           return Container(
-//             padding: const EdgeInsets.all(16),
-//             child: TextField(
-//               controller: controller,
-//               decoration: InputDecoration(
-//                 labelText:
-//                 'Type data index-${controllers.indexOf(controller) + 1}',
-//               ),
-//             ),
-//           );
-//         }).toList(),
-//       ),
-//       floatingActionButton: Row(
-//         mainAxisSize: MainAxisSize.min,
-//         children: [
-//           FloatingActionButton(
-//             heroTag: 'min',
-//             onPressed: () {
-//               setState(() {
-//                 controllers.removeLast();
-//               });
-//             },
-//             child: Icon(Icons.remove),
-//           ),
-//           SizedBox(width: 8),
-//           FloatingActionButton(
-//             heroTag: 'add',
-//             onPressed: () {
-//               setState(() {
-//                 controllers.add(TextEditingController());
-//               });
-//             },
-//             child: Icon(Icons.add),
-//           )
-//         ],
-//       ),
-//     );
-//   }
-// }

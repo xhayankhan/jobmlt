@@ -22,6 +22,7 @@ class _makeBrandListState extends State<makeBrandList> {
   _makeBrandListState(this.id, this.filteredBy,this.email,this.CAT,this.svalue);
   List<MakeModel> _apiResponse = [];
   var valNeeded='';
+
   @override
   void initState() {
     //_fetchNotes();
@@ -55,7 +56,7 @@ class _makeBrandListState extends State<makeBrandList> {
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.only(top: 20.0,bottom: 5),
-                        child: Text('',
+                        child: Text('Select $id',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
@@ -121,61 +122,71 @@ class _makeBrandListState extends State<makeBrandList> {
                             );
                           }
                           else if(id=='Brand'){
-                            return Column(
+                            if(svalue.isNotEmpty) {
+                              return Column(
 
-                              children: [
-                                FutureBuilder(
-                                  future: brandFetch(),
-                                  builder: (context, data) {
-                                    if (data.hasError) {
-                                      return Center(
-                                          child: Text("${data.error}"));
-                                    } else if (data.hasData) {
-                                      var items = data.data as List<MakeModel>;
-                                      return ListView.builder(
-                                        scrollDirection: Axis.vertical,
-                                        shrinkWrap: true,
-                                        physics: ScrollPhysics(),
-                                        itemCount: items == null ? 0 : items
-                                            .length,
-                                        itemBuilder: (context, index) {
-                                          return Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Container(
-                                              child: Column(
+                                children: [
+                                  FutureBuilder(
+                                    future: brandFetch(),
+                                    builder: (context, data) {
+                                      if (data.hasError) {
+                                        return Center(
+                                            child: Text("${data.error}"));
+                                      } else if (data.hasData) {
+                                        var items = data.data as List<
+                                            MakeModel>;
+                                        return ListView.builder(
+                                          scrollDirection: Axis.vertical,
+                                          shrinkWrap: true,
+                                          physics: ScrollPhysics(),
+                                          itemCount: items == null ? 0 : items
+                                              .length,
+                                          itemBuilder: (context, index) {
+                                            return Padding(
+                                              padding: const EdgeInsets.all(
+                                                  8.0),
+                                              child: Container(
+                                                child: Column(
 
-                                                children: [
-                                                  InkWell(
+                                                  children: [
+                                                    InkWell(
 
-                                                    child: Text(
-                                                      '${items[index].text}',
-                                                      style: TextStyle(
+                                                      child: Text(
+                                                        '${items[index].text}',
+                                                        style: TextStyle(
 
-                                                        color: Colors.black,
-                                                        fontSize: 20,
-                                                      ),),
-                                                    onTap: () {
-                                                      Navigator.pop(context,
-                                                          items[index].text);
-                                                    },
-                                                  ),
-                                                ],
+                                                          color: Colors.black,
+                                                          fontSize: 20,
+                                                        ),),
+                                                      onTap: () {
+
+                                                        Navigator.pop(context,
+                                                            items[index].text);
+                                                      },
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    } else {
-                                      return Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                  },
-                                ),
-                              ],
-                            );
+                                            );
+                                          },
+                                        );
+                                      } else {
+                                        return Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ],
+                              );
+                            }else{
+                              return Text('Please Select Make First',style: TextStyle(
+                                fontSize: 18
+                              ),);
+                            }
                           }
                           else if(id=='Model'){
+                            if(svalue!='null'){
                             return Column(
 
                               children: [
@@ -229,6 +240,12 @@ class _makeBrandListState extends State<makeBrandList> {
                                 ),
                               ],
                             );
+                            }
+                            else{
+                              return Text('Please Select Brand First',style: TextStyle(
+                                  fontSize: 18
+                              ),);
+                            }
                           }
                           else if(id=='Color'){
                             return Column(
@@ -395,6 +412,60 @@ class _makeBrandListState extends State<makeBrandList> {
                               ],
                             );
                           }
+                          else if(id=='LOCKED'){
+                            return Column(
+
+                              children: [
+                                FutureBuilder(
+                                  future:fetchLock(),
+                                  builder: (context, data) {
+                                    if (data.hasError) {
+                                      return Center(
+                                          child: Text("${data.error}"));
+                                    } else if (data.hasData) {
+                                      var items = data.data as List;
+                                      return ListView.builder(
+                                        scrollDirection: Axis.vertical,
+                                        shrinkWrap: true,
+                                        physics: ScrollPhysics(),
+                                        itemCount: items == null ? 0 : items.length,
+                                        itemBuilder: (context, index) {
+                                          return Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Container(
+                                              child: Column(
+
+                                                children: [
+                                                  InkWell(
+
+                                                    child: Text(
+                                                      '${items[index].toString()}',
+                                                      style: TextStyle(
+
+                                                        color: Colors.black,
+                                                        fontSize: 20,
+                                                      ),),
+                                                    onTap: () {
+                                                      Navigator.pop(context,
+                                                          items[index].toString());
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    } else {
+                                      return Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            );
+                          }
                           else if(id=='Condition'){
                             return Column(
 
@@ -461,7 +532,8 @@ class _makeBrandListState extends State<makeBrandList> {
                     Expanded(child: Divider(height: 10,)),
                     Center(
                       child: InkWell(
-                        onTap: (){Get.back();},
+                        onTap: (){  Navigator.pop(context,
+                           '');},
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Text(
@@ -559,5 +631,12 @@ class _makeBrandListState extends State<makeBrandList> {
     final list = json.decode(Response2.body) as List<dynamic>;
 
     return list.map((e) => MakeModel.fromJson(e)).toList();
+  }
+  Future <List>fetchLock() async{
+    var lockCheck = [
+      "LOCKED",
+      "UNLOCKED",
+    ];
+    return lockCheck ;
   }
 }

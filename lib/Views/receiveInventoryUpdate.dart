@@ -894,7 +894,7 @@ class _receiveInventoryUpdateState extends State<receiveInventoryUpdate> {
                       Builder(
                           builder: (context) {
 
-                            if (Po==null || itemssData.isEmpty||itemUpdateLineData[0]['ItemCode']==null) {
+                            if (Po==null || itemssData.isEmpty) {
                               return Text('');
                             } else {
                               return ListView.builder(

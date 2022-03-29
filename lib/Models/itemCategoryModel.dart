@@ -39,7 +39,7 @@ class ItemCategoryModel {
     itemCategoryName: json["ItemCategoryName"],
     companyId: json["CompanyID"],
     isActive: json["IsActive"],
-    dateTimeCreated: DateTime.parse(json["DateTimeCreated"]),
+    dateTimeCreated: json["DateTimeCreated"],
     dateTimeModified: json["DateTimeModified"],
     companyLocationId: json["CompanyLocationID"],
     parentCategoryId: json["ParentCategoryID"],
